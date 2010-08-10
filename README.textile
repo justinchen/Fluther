@@ -1,0 +1,104 @@
+h1. Fluther Ruby Client
+
+h2. Introduction
+
+This gem provides an interface to the "Fluther discussion service":http://www.fluther.com/.  It is implemented as a piece of Rack
+middleware which handles proxying requests to Fluther and returning the response so that it can be included in your web application.
+While it should be usable with any Rack-based application, these docs assume you are embedding Fluther in a Rails 2.x application.
+
+Requirements:
+* Rack
+* Warden
+* Thin (optional)
+
+h2. Installation
+
+* Add the @fluther@ gem to your application (i.e. in @Gemfile@ or @environment.rb@).
+
+* Create an initializer (e.g. @config/initializers/fluther.rb@) that inserts the Fluther proxy after the Warden module,
+mounting it on the appropriate path:
+
+<pre>
+Rails.configuration.after_initialize  do
+  Rails.configuration.middleware.insert_after Warden::Manager, Fluther::Proxy, '/qna'
+end
+</pre>
+
+* In the environment or initializer, add the Fluther configuration:
+
+<pre>
+class Fluther::Config
+  # hostname of the Fluther server for this environment (provided by Fluther)
+  fluther_host 'fstage.fluther.com'
+
+  # federated API key (provided by Fluther)
+  app_key '2b6a0009c414c53e3d4fa8f8c3134d59'
+
+  # mapping of attributes in the User model to the Fluther user
+  user_fields :id => :id, :name => :name, :email => :email  # (defaults)
+end
+</pre>
+
+
+h2. Rails Integration
+
+The proxy provides three Rack variables that include the Fluther response: @fluther.header@, @fluther.title@, and
+@fluther.response@.  The first two (may) contain HTML blocks which should be inserted into the page @<head>@ and @<title>@ blocks,
+respectively, and the third is the HTML for the Fluther widget itself.
+
+To integrate the response into your application, you should add an action which is routed from the same path as the Fluther proxy.
+For this example, we assume the controller is @MainController@, the action is @fluther@, and as above, it is mounted at @/qna@.
+Also, we assume that the application layout includes @yield(:head)@ in the @<head>@ block:
+
+<pre>
+# config/routes.rb
+map.fluther '/qna/*_', :controller => 'main', :action => 'fluther'
+</pre>
+
+<pre>
+# app/views/main/fluther.html.erb
+<%
+  if (header = request.env['fluther.header']).present?
+    content_for :head, header
+  end
+  if (title = request.env['fluther.title']).present?
+    content_for :head, content_tag(:title, title)
+  end
+%>
+<%= request.env['fluther.response'] -%>
+</pre>
+
+You should now be able to start your application, navigate to http://localhost:300/qna and see the Fluther page.
+
+
+h2. Thin Integration
+
+The Fluther gem uses "EventMachine":http://github.com/igrigorik/em-http-request to perform the HTTP request.  When running under a
+non-EventMachine web server, the proxy request will be performed synchronously.  However, when running under
+the "Thin":http://code.macournoyer.com/thin/ web server, the proxy can take advantage of the presense of EventMachine to perform the
+request asynchronously, i.e. without blocking the web server process.  This does require some additional setup:
+
+* Add the @async-rack@ gem to your application.
+* Add the following Rails code (v2 specific) to the block in the initializer you created above:
+
+<pre>
+...
+Rails.configuration.threadsafe!
+Rails.configuration.dependency_loading = true
+class AsyncRack::Lock  # kludge to disable error on async response in Rack::Lock
+  def async_callback(result)
+    super
+  end
+end
+</pre>
+
+* To run your application: @script/server thin@
+
+
+h2. Credits
+
+Special thanks to Andrew and Ben at Fluther for all their help with integration and testing.
+
+* Author: "Steve Sloan":mailto:steve@conceivian.com
+* Copyright: (c) 2010 Conceivian Corporation
+* License: MIT
