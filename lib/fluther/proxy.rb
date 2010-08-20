@@ -24,7 +24,7 @@ class Proxy
 protected
   def build_request
     params = @in_req.params.dup.update(
-      :fed_key => Fluther::Config.app_key,
+      :fed_key => Fluther::Config.app_key
     )
     params[:fed_sessionid] = @in_req.cookies['fed_sessionid']  if @in_req.cookies['fed_sessionid']
     if @user.present?
