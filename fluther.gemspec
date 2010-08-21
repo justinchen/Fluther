@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{fluther}
-  s.version = "1.0.0"
+  s.name = %q{justinchen-fluther}
+  s.version = "1.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Steve Sloan"]
+  s.authors = ["Justin CHen"]
   s.date = %q{2010-08-10}
-  s.description = %q{Ruby interface to the Fluther discussion system}
-  s.email = %q{steve@conceivian.com}
+  s.description = %q{Modified version of the original fluther gem.}
+  s.email = %q{justin@menuism.com}
   s.extra_rdoc_files = [
     "README.textile"
   ]
@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
      "lib/fluther/config.rb",
      "lib/fluther/proxy.rb"
   ]
-  s.homepage = %q{http://github.com/conceivian/fluther}
+  s.homepage = %q{http://github.com/justinchen/fluther}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.7}

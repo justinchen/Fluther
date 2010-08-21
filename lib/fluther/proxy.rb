@@ -40,6 +40,7 @@ protected
         'User-Agent' => "Fluther Federated Client #{Fluther::ClientVersion} (Ruby)",
         'X-Forwarded-For' => @in_req.env['REMOTE_ADDR'],
         'X-Forwarded-Host' => @in_req.env['HTTP_HOST'],
+        'X-Forwarded-User-Agent' => @in_req.user_agent
       }
     }
     options[:head]['X-Requested-With'] = @in_req.env['HTTP_X_REQUESTED_WITH']  if @in_req.env['HTTP_X_REQUESTED_WITH']
@@ -47,6 +48,7 @@ protected
 
     path = @in_req.path.sub( %r{^#{@prefix}}, '' )
     path = '/' + path  unless path.starts_with?('/')
+    path = path + '/' unless path.ends_with?('/')
     url = "#{@in_req.scheme}://#{Fluther::Config.fluther_host}#{path}"
 
 Rails.logger.debug @in_req.request_method
@@ -84,9 +86,8 @@ Rails.logger.debug options
   end
 
   def handle_response( fluther )
-Rails.logger.debug fluther.response_header.status
+Rails.logger.debug "Fluther HTTP Response Code: #{fluther.response_header.status}" 
 Rails.logger.debug fluther.response_header
-
     type_header = fluther.response_header['CONTENT_TYPE']
     content_type = type_header.split(';')[0] || 'text/html'
 
